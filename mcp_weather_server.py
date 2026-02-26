@@ -32,7 +32,7 @@ async def fetch_weather(city: str) -> dict[str, Any] | None:
         logger.error("❌ WEATHER_API_KEY 未设置")
         return {"error": "WEATHER_API_KEY 未设置"}
 
-    logger.info(f"🌐 正在请求 OpenWeather API: {city}")
+    logger.info(f"🌐 正在请求 OpenWeather API key: {WEATHER_API_KEY}")
 
     params = {
         "q": city,
@@ -40,6 +40,8 @@ async def fetch_weather(city: str) -> dict[str, Any] | None:
         "units": "metric",
         "lang": "zh_cn"
     }
+
+    logger.info(f"🌐 正在请求 OpenWeather params: {params}")
 
     headers = {
         "User-Agent": USER_AGENT

@@ -36,10 +36,11 @@ class MCPClient():
             raise ValueError("服务器脚本必须是 .py 或 .js 文件")
 
         command = "python" if is_python else "node"
+        # 传递当前环境变量给 server，包括 WEATHER_API_KEY
         server_params = StdioServerParameters(
             command=command,
             args=[server_script_path],
-            env=None
+            env=dict(os.environ)  # 传递所有环境变量
         )
 
         # 启动MCP Server并建立通信
