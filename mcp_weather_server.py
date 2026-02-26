@@ -1,9 +1,19 @@
 import json
 import httpx
 import os
+import sys
+import logging
 from typing import Any
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+
+# 配置日志输出到 stderr，这样不会被 stdio 通信管道捕获
+logging.basicConfig(
+    level=logging.INFO,
+    format='[Server] %(message)s',
+    stream=sys.stderr
+)
+logger = logging.getLogger(__name__)
 
 mcp_server = FastMCP("WeatherServer")
 load_dotenv()
@@ -19,7 +29,10 @@ async def fetch_weather(city: str) -> dict[str, Any] | None:
     :return: 天气数据字典；若出错返回包含 error 信息的字典
     """
     if not WEATHER_API_KEY:
-        print("❌ server错误: WEATHER_API_KEY 未设置")
+        logger.error("❌ WEATHER_API_KEY 未设置")
+        return {"error": "WEATHER_API_KEY 未设置"}
+
+    logger.info(f"🌐 正在请求 OpenWeather API: {city}")
 
     params = {
         "q": city,
@@ -36,10 +49,13 @@ async def fetch_weather(city: str) -> dict[str, Any] | None:
         try:
             response = await client.get(WEATHER_API_BASE, params=params, headers=headers)
             response.raise_for_status()
+            logger.info(f"✅ API 请求成功: {response.status_code}")
             return response.json()
         except httpx.HTTPStatusError as e:
+            logger.error(f"❌ HTTP 错误: {e.response.status_code}")
             return {"error": f"HTTP 错误: {e.response.status_code}"}
         except Exception as e:
+            logger.error(f"❌ 请求失败: {str(e)}")
             return {"error": f"请求失败: {str(e)}"}
 
 def format_weather(data: dict[str, Any] | str) -> str:
@@ -79,8 +95,11 @@ async def query_weather(city: str) -> str:
     :param city: 城市名称（需使用英文）
     :return: 格式化后的天气信息
     """
+    logger.info(f"🔍 收到天气查询请求: city={city}")
     data = await fetch_weather(city)
-    return format_weather(data)
+    result = format_weather(data)
+    logger.info(f"✅ 查询完成，返回结果")
+    return result
 
 if __name__ == "__main__":
     # 以标准 I/O 方式运行 MCP 服务器
