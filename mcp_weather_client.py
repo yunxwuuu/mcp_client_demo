@@ -1,16 +1,15 @@
 import asyncio
 import os
+import sys
 import json
 from typing import Optional
 from contextlib import AsyncExitStack
 
-import self
 from openai import OpenAI
 from dotenv import load_dotenv
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from openai.resources.chat.completions import messages
 
 load_dotenv()
 
@@ -20,8 +19,8 @@ class MCPClient():
         """初始化 MCP 客户端"""
         self.exit_stack = AsyncExitStack()
         self.openai_api_key = os.getenv("QWEN_API_KEY")  # 读取 OpenAI API Key
-        self.base_url = 'https://dashscope.aliyuncs.com/api/v1'
-        self.model ='qwen3-max'
+        self.base_url = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+        self.model = 'qwen-plus'
         if not self.openai_api_key:
             raise ValueError("❌ 未找到 OpenAI API Key，请在 .env 文件中设置 OPENAI_API_KEY")
         self.client = OpenAI(api_key=self.openai_api_key, base_url=self.base_url)  # 创建OpenAI client
@@ -92,6 +91,7 @@ class MCPClient():
             # 执行工具
             result = await self.session.call_tool(tool_name, tool_args)
             print(f"\n\n[Calling tool {tool_name} with args {tool_args}]\n\n")
+            print("\n请求了mcp server，返回的数据是:", result.content[0].text)
 
             # 将模型返回的调用哪个工具数据和工具执行完成后的数据都存入messages中
             messages.append(content.message.model_dump())
@@ -146,6 +146,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    import sys
 
     asyncio.run(main())

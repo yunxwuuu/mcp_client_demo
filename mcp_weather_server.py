@@ -18,6 +18,8 @@ async def fetch_weather(city: str) -> dict[str, Any] | None:
     :param city: 城市名称（需使用英文，如 Beijing）
     :return: 天气数据字典；若出错返回包含 error 信息的字典
     """
+    if not WEATHER_API_KEY:
+        print("❌ server错误: WEATHER_API_KEY 未设置")
 
     params = {
         "q": city,
